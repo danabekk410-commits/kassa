@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#2b1d14">
+<title>Касса</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f6f1ea;--card:#fff;--ink:#2b1d14;--muted:#8a7a6c;--line:#e6dccf;
+  --accent:#2b1d14;--kaspi:#e3262f;--cash:#1f8a4c;--chip:#efe6da;--warn:#b5651d;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.25 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
+input{font:inherit}
+.hide{display:none!important}
+
+header{position:sticky;top:0;z-index:5;background:var(--ink);color:#fff;display:flex;align-items:center;gap:6px;padding:8px 12px}
+header .tab{padding:8px 14px;border-radius:999px;font-weight:600;opacity:.65}
+header .tab.on{background:#fff;color:var(--ink);opacity:1}
+header .net{margin-left:auto;font-size:13px;display:flex;align-items:center;gap:6px;opacity:.85}
+header .dot{width:9px;height:9px;border-radius:50%;background:#7bd389}
+header .dot.off{background:#f0b44c}
+
+.cats{position:sticky;top:52px;z-index:4;background:var(--bg);display:flex;gap:8px;overflow-x:auto;padding:10px 12px;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.cats::-webkit-scrollbar{display:none}
+.cats button{flex:none;padding:13px 22px;border-radius:999px;background:var(--chip);font-size:19px;font-weight:700;min-height:52px}
+
+#sell{padding:4px 12px calc(96px + var(--safe-b))}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 2px 8px;scroll-margin-top:136px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr)}}
+.tile{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:84px;text-align:left}
+.tile .nm{font-weight:650;font-size:16px;padding-right:22px}
+.tile.one{justify-content:space-between}
+.tile.one .pr{font-size:15px;color:var(--muted)}
+.tile .pr s{margin-left:6px;font-size:12px}
+.tile .off{display:inline-block;margin-top:4px;padding:1px 6px;border-radius:6px;background:#e8f5e9;color:#2e7d32;font-size:12px;font-weight:700}
+.tile.one:active{background:var(--chip)}
+.sizes{display:flex;gap:4px;margin-top:auto}
+.sizes button{flex:1;background:var(--chip);border-radius:10px;padding:7px 2px;line-height:1.1;min-height:44px}
+.sizes button:active{background:var(--ink);color:#fff}
+.sizes small{display:block;font-size:11px;color:var(--muted)}
+.sizes button:active small{color:#ddd}
+.sizes b{font-size:14px}
+.badge{position:absolute;top:8px;right:8px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--ink);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:10px 12px calc(10px + var(--safe-b));background:linear-gradient(transparent,var(--bg) 30%)}
+.bar button{width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--ink);color:#fff;border-radius:16px;padding:16px 18px;font-size:18px;font-weight:700}
+.bar button:disabled{opacity:.35}
+
+.sheet-bg{position:fixed;inset:0;z-index:10;background:rgba(20,12,6,.45);display:flex;align-items:flex-end}
+.sheet{width:100%;max-height:88vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 14px calc(16px + var(--safe-b))}
+.sheet h3{margin:0 0 10px;font-size:20px;display:flex;justify-content:space-between;align-items:center}
+.sheet h3 button{font-size:15px;color:var(--muted);font-weight:500}
+.line{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px}
+.line .t{flex:1;min-width:0}
+.line .t small{color:var(--muted)}
+.qty{display:flex;align-items:center;gap:4px}
+.qty button{width:40px;height:40px;border-radius:10px;background:var(--chip);font-size:22px;font-weight:700}
+.qty span{min-width:24px;text-align:center;font-weight:700}
+.sum{display:flex;justify-content:space-between;font-size:22px;font-weight:800;margin:14px 2px}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pay button,.big{border-radius:14px;padding:18px 10px;font-size:18px;font-weight:700;color:#fff}
+.kaspi{background:var(--kaspi)}.cashb{background:var(--cash)}
+.pay .mixb{grid-column:1/-1;background:linear-gradient(90deg,var(--kaspi),var(--cash))}
+.editbar{background:#fff4e0;border:1px solid #f0c98a;border-radius:12px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.editbar button{color:var(--warn);font-weight:700}
+.lbl{font-size:13px;color:var(--muted);margin:10px 2px 4px}
+.big{width:100%;background:var(--ink);margin-top:10px}
+.big:disabled{opacity:.35}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.quick button{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 4px;font-weight:650}
+.quick button.on{background:var(--ink);color:#fff}
+.field{width:100%;font-size:24px;font-weight:700;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.change{font-size:20px;margin:12px 2px;font-weight:700}
+.change.bad{color:var(--kaspi)}
+
+.toast{position:fixed;left:12px;right:12px;bottom:calc(86px + var(--safe-b));z-index:20;background:var(--ink);color:#fff;border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast button{color:#ffd28a;font-weight:700}
+
+#rep{padding:8px 12px calc(30px + var(--safe-b))}
+.daynav{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px}
+.daynav button{width:44px;height:44px;border-radius:12px;background:var(--chip);font-size:20px;font-weight:700}
+.daynav b{font-size:18px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.kpi small{display:block;color:var(--muted);font-size:13px;margin-bottom:4px}
+.kpi b{font-size:22px}
+.kpi.wide{grid-column:1/-1}
+.note{font-size:13px;color:var(--warn);margin:8px 2px}
+.list .row{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:6px;width:100%;text-align:left}
+.list .row.void{opacity:.45}
+.list .row.void .amt{text-decoration:line-through}
+.row .tm{font-variant-numeric:tabular-nums;color:var(--muted);min-width:44px}
+.row .it{flex:1;font-size:14px;min-width:0}
+.row .amt{font-weight:750;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;color:#fff;border-radius:6px;padding:2px 6px;margin-bottom:3px}
+.tag.k{background:var(--kaspi)}.tag.c{background:var(--cash)}.tag.e{background:var(--warn)}
+.tag.m{background:linear-gradient(90deg,var(--kaspi),var(--cash))}
+.addexp{display:flex;gap:6px;margin:8px 0}
+.addexp input{min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.addexp input[type=number]{width:110px}
+.addexp input[type=text]{flex:1}
+.addexp button{background:var(--ink);color:#fff;border-radius:12px;padding:0 14px;font-weight:700}
+.empty{color:var(--muted);text-align:center;padding:16px}
+.nokey{padding:40px 20px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <button class="tab on" data-tab="sell">Касса</button>
+  <button class="tab" data-tab="rep">Сводка</button>
+  <div class="net"><span class="dot" id="dot"></span><span id="netTxt">онлайн</span></div>
+</header>
+
+<div id="nokey" class="nokey hide">Нет ключа доступа. Откройте кассу по ссылке, которую прислал владелец.</div>
+
+<main id="sellWrap">
+  <nav class="cats" id="cats"></nav>
+  <section id="sell"></section>
+  <div class="bar"><button id="cartBtn" disabled><span id="cartCnt">Чек пуст</span><span id="cartSum">0 ₸</span></button></div>
+</main>
+
+<section id="rep" class="hide">
+  <div class="daynav"><button id="dPrev" aria-label="Предыдущий день">‹</button><b id="dLbl"></b><button id="dNext" aria-label="Следующий день">›</button></div>
+  <div class="kpis">
+    <div class="kpi wide"><small>Выручка</small><b id="kRev">0 ₸</b></div>
+    <div class="kpi"><small>Kaspi QR</small><b id="kKaspi">0 ₸</b></div>
+    <div class="kpi"><small>Наличные</small><b id="kCash">0 ₸</b></div>
+    <div class="kpi"><small>Расходы</small><b id="kExp">0 ₸</b></div>
+    <div class="kpi"><small>Выручка − расходы</small><b id="kNet">0 ₸</b></div>
+  </div>
+  <div class="note hide" id="repNote"></div>
+  <h2>Расход</h2>
+  <form class="addexp" id="expForm">
+    <input type="number" inputmode="numeric" min="1" placeholder="₸" id="expAmt" required>
+    <input type="text" maxlength="120" placeholder="На что: молоко, стаканы…" id="expNote">
+    <button>+</button>
+  </form>
+  <h2 id="chkH">Чеки</h2>
+  <div class="list" id="chkList"></div>
+</section>
+
+<div class="sheet-bg hide" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div class="toast hide" id="toast"><span id="toastTxt"></span><button id="toastBtn"></button></div>
+
+<script>
+'use strict';
+const API = '/api/kassa';
+const TZ_MS = 5 * 3600e3; // Алматы, UTC+5 без летнего времени
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('ru-RU').replace(/ /g, ' ') + ' ₸';
+const dayOf = ts => new Date(ts + TZ_MS).toISOString().slice(0, 10);
+const timeOf = ts => new Date(ts + TZ_MS).toISOString().slice(11, 16);
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12));
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+
+// --- хранилище на телефоне ---
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('kassa.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('kassa.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+
+// Ключ приходит в ссылке (#k=...) и дальше живёт на телефоне.
+(function takeKey() {
+  const m = location.hash.match(/k=([A-Za-z0-9_-]{16,})/);
+  if (m) { store.set('key', m[1]); history.replaceState(null, '', location.pathname); }
+})();
+const KEY = store.get('key', '');
+
+let sales = store.get('sales', []);   // {id,ts,method,total,cash_in,items,voided,synced}
+let exps = store.get('exps', []);     // {id,ts,amount,note,voided,synced}
+// Локально держим две недели; всё старше уже на сервере.
+(function prune() {
+  const cut = Date.now() - 14 * 864e5;
+  sales = sales.filter(s => s.ts > cut || !s.synced);
+  exps = exps.filter(e => e.ts > cut || !e.synced);
+})();
+// false — телефон не дал записать (память, приватный режим): продажу не подтверждаем.
+const save = () => store.set('sales', sales) && store.set('exps', exps);
+const saveFail = () => alert('Не удалось сохранить на телефоне. Чек НЕ записан — запишите вручную и обновите страницу.');
+
+// --- меню и чек ---
+let menu = { cats: [] };
+let cart = []; // {k,n,l,p,q}
+let editing = null; // чек из сводки, который сейчас правим: {id,ts,total}
+
+// Скидка по времени (menu.json → discount): цена в чек идёт уже со скидкой,
+// округлённая до 10 ₸, к названию дописывается «−N%».
+let saleOn = false;
+function discountNow() {
+  const d = menu.discount;
+  if (!d) return false;
+  const h = new Date(Date.now() + TZ_MS).getUTCHours();
+  return h >= d.from && h < d.to;
+}
+const cut = p => Math.round(p * (100 - menu.discount.pct) / 1000) * 10;
+const inSale = cat => !!menu.discount && menu.discount.cats.includes(cat);
+// Цена в чеке считается по времени оплаты, а не по времени тапа: на границе
+// окна скидки строки со скидочных категорий пересчитываются от базовой цены.
+function repriceCart() {
+  const on = discountNow(), tag = on ? ' −' + menu.discount.pct + '%' : '';
+  const out = [];
+  cart.forEach(x => {
+    if (x.base) { x.n = x.base.n + tag; x.p = on ? cut(x.base.p) : x.base.p; x.k = x.n + '|' + x.l; }
+    const same = out.find(y => y.k === x.k);
+    if (same) same.q += x.q; else out.push(x);
+  });
+  cart = out;
+}
+
+function renderMenu() {
+  const cats = $('cats'), sell = $('sell');
+  saleOn = discountNow();
+  repriceCart();
+  cats.textContent = ''; sell.textContent = '';
+  menu.cats.forEach((c, ci) => {
+    const chip = el('button', '', c.c);
+    chip.onclick = () => $('cat' + ci).scrollIntoView({ behavior: 'smooth' });
+    cats.append(chip);
+    const h = el('h2', '', c.c); h.id = 'cat' + ci; sell.append(h);
+    const grid = el('div', 'grid');
+    const off = saleOn && inSale(c.c);
+    const tag = off ? ' −' + menu.discount.pct + '%' : '';
+    c.items.forEach(it => {
+      const one = it.v.length === 1;
+      const tile = el(one ? 'button' : 'div', 'tile' + (one ? ' one' : ''));
+      tile.dataset.n = it.n;
+      tile.append(el('div', 'nm', it.n));
+      if (one) {
+        const p = off ? cut(it.v[0].p) : it.v[0].p;
+        const pr = el('div', 'pr', fmt(p));
+        if (off) { pr.append(el('s', '', fmt(it.v[0].p))); tile.append(pr, el('span', 'off', tag.trim())); }
+        else tile.append(pr);
+        tile.onclick = () => add(it.n + tag, '', p, inSale(c.c) ? { n: it.n, p: it.v[0].p } : null);
+      } else {
+        // Новый формат: объёмы — прямо на плитке, позиция с объёмом = один тап.
+        const sz = el('div', 'sizes');
+        it.v.forEach(v => {
+          const b = el('button');
+          b.append(el('small', '', v.l.replace(' мл', '')), el('b', '', v.p));
+          b.setAttribute('aria-label', it.n + ' ' + v.l + ' ' + v.p + ' тенге');
+          const p = off ? cut(v.p) : v.p;
+          if (off) { b.lastChild.textContent = p; b.setAttribute('aria-label', it.n + ' ' + v.l + ' ' + p + ' тенге со скидкой'); }
+          b.onclick = () => add(it.n + tag, v.l, p, inSale(c.c) ? { n: it.n, p: v.p } : null);
+          sz.append(b);
+        });
+        tile.append(sz);
+      }
+      grid.append(tile);
+    });
+    sell.append(grid);
+  });
+  renderCart();
+}
+
+function add(n, l, p, base) {
+  const k = n + '|' + l;
+  const line = cart.find(x => x.k === k);
+  if (line) line.q++; else cart.push({ k, n, l, p, q: 1, base });
+  if (navigator.vibrate) navigator.vibrate(12);
+  renderCart();
+}
+
+const cartTotal = () => cart.reduce((s, x) => s + x.p * x.q, 0);
+const cartCount = () => cart.reduce((s, x) => s + x.q, 0);
+
+function renderCart() {
+  const cnt = cartCount();
+  $('cartBtn').disabled = !cnt;
+  $('cartCnt').textContent = (editing ? 'Правка · ' : 'Чек · ') + (cnt ? cnt + ' поз.' : 'пуст');
+  if (!cnt && !editing) $('cartCnt').textContent = 'Чек пуст';
+  $('cartBtn').disabled = !cnt && !editing;
+  $('cartSum').textContent = fmt(cartTotal());
+  document.querySelectorAll('.tile').forEach(t => {
+    const q = cart.filter(x => x.n === t.dataset.n || x.n.startsWith(t.dataset.n + ' −')).reduce((s, x) => s + x.q, 0);
+    let b = t.querySelector('.badge');
+    if (q) { if (!b) { b = el('span', 'badge'); t.append(b); } b.textContent = q; }
+    else if (b) b.remove();
+  });
+}
+
+// --- нижняя шторка ---
+function openSheet(build) { const s = $('sheet'); s.textContent = ''; build(s); $('sheetBg').classList.remove('hide'); }
+function closeSheet() { $('sheetBg').classList.add('hide'); }
+$('sheetBg').onclick = e => { if (e.target === $('sheetBg')) closeSheet(); };
+
+function showCart() {
+  if (!cart.length && !editing) return closeSheet();
+  if (discountNow() !== saleOn) return renderMenu(), showCart();
+  openSheet(s => {
+    const h = el('h3', '', editing ? 'Правка чека' : 'Чек');
+    const clr = el('button', '', editing ? 'Не править' : 'Очистить');
+    clr.onclick = () => { cart = []; editing = null; renderCart(); closeSheet(); };
+    h.append(clr); s.append(h);
+    if (editing) {
+      const eb = el('div', 'editbar');
+      eb.append(el('span', '', 'Чек ' + timeOf(editing.ts) + ', было ' + fmt(editing.total) + '. Поправь позиции и выбери оплату заново — старый чек отметится «исправлен».'));
+      s.append(eb);
+      if (!cart.length) { s.append(el('div', 'empty', 'Позиций нет — добавь из меню или нажми «Не править». Отменить чек целиком — в Сводке.')); return; }
+    }
+    cart.forEach(x => {
+      const ln = el('div', 'line');
+      const t = el('div', 't');
+      t.append(el('div', '', x.n + (x.l ? ' · ' + x.l : '')), el('small', '', fmt(x.p) + (x.q > 1 ? ' × ' + x.q + ' = ' + fmt(x.p * x.q) : '')));
+      const q = el('div', 'qty');
+      const minus = el('button', '', '−'), plus = el('button', '', '+');
+      minus.onclick = () => { x.q--; if (!x.q) cart = cart.filter(y => y !== x); renderCart(); showCart(); };
+      plus.onclick = () => { x.q++; renderCart(); showCart(); };
+      q.append(minus, el('span', '', x.q), plus);
+      ln.append(t, q); s.append(ln);
+    });
+    const sum = el('div', 'sum'); sum.append(el('span', '', 'Итого'), el('span', '', fmt(cartTotal()))); s.append(sum);
+    const pay = el('div', 'pay');
+    const k = el('button', 'kaspi', 'Kaspi QR'), c = el('button', 'cashb', 'Наличные'), m = el('button', 'mixb', 'Kaspi + наличные');
+    k.onclick = () => finish('kaspi', null, null);
+    c.onclick = showCash;
+    m.onclick = showMixed;
+    pay.append(k, c);
+    if (cartTotal() > 1) pay.append(m);
+    s.append(pay);
+  });
+}
+$('cartBtn').onclick = showCart;
+
+function showCash() {
+  const total = cartTotal();
+  let got = null;
+  openSheet(s => {
+    const h = el('h3', '', 'Наличные · ' + fmt(total));
+    const back = el('button', '', '‹ Чек'); back.onclick = showCart; h.append(back); s.append(h);
+    const inp = el('input', 'field'); inp.type = 'number'; inp.inputMode = 'numeric'; inp.placeholder = 'Сколько дал клиент';
+    const quick = el('div', 'quick');
+    const change = el('div', 'change');
+    const ok = el('button', 'big', 'Оплачено');
+    const upd = () => {
+      quick.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === got));
+      if (got == null) { change.textContent = 'Сдача: —'; change.className = 'change'; ok.disabled = false; return; }
+      const d = got - total;
+      change.textContent = d >= 0 ? 'Сдача: ' + fmt(d) : 'Не хватает ' + fmt(-d);
+      change.className = 'change' + (d < 0 ? ' bad' : '');
+      ok.disabled = d < 0;
+    };
+    const opts = [total, ...[1000, 2000, 5000, 10000, 20000].filter(v => v > total)].slice(0, 6);
+    opts.forEach((v, i) => {
+      const b = el('button', '', i === 0 ? 'Без сдачи' : fmt(v)); b.dataset.v = v;
+      b.onclick = () => { got = v; inp.value = ''; upd(); };
+      quick.append(b);
+    });
+    inp.oninput = () => { got = inp.value === '' ? null : Math.round(+inp.value); upd(); };
+    ok.onclick = () => finish('cash', got, null);
+    s.append(quick, inp, change, ok);
+    upd();
+  });
+}
+
+// Часть по Kaspi, остаток наличными (со сдачей, если дали больше).
+function showMixed() {
+  const total = cartTotal();
+  openSheet(s => {
+    const h = el('h3', '', 'Kaspi + наличные · ' + fmt(total));
+    const back = el('button', '', '‹ Чек'); back.onclick = showCart; h.append(back); s.append(h);
+    const ki = el('input', 'field'); ki.type = 'number'; ki.inputMode = 'numeric'; ki.placeholder = 'Сколько по Kaspi';
+    const ci = el('input', 'field'); ci.type = 'number'; ci.inputMode = 'numeric'; ci.placeholder = 'Сколько дал наличными (если со сдачей)';
+    const info = el('div', 'change');
+    const ok = el('button', 'big', 'Оплачено');
+    let kaspi = null, got = null;
+    const upd = () => {
+      kaspi = ki.value === '' ? null : Math.round(+ki.value);
+      got = ci.value === '' ? null : Math.round(+ci.value);
+      if (kaspi == null || !(kaspi > 0) || kaspi >= total) {
+        info.textContent = kaspi != null && kaspi >= total ? 'По Kaspi вся сумма — нажми «‹ Чек» и выбери Kaspi QR' : 'Наличными: —';
+        info.className = 'change' + (kaspi != null ? ' bad' : '');
+        ok.disabled = true; return;
+      }
+      const cash = total - kaspi;
+      let t = 'Наличными: ' + fmt(cash);
+      let bad = false;
+      if (got != null) {
+        if (got < cash) { t += ' · не хватает ' + fmt(cash - got); bad = true; }
+        else t += ' · сдача ' + fmt(got - cash);
+      }
+      info.textContent = t; info.className = 'change' + (bad ? ' bad' : '');
+      ok.disabled = bad;
+    };
+    ki.oninput = upd; ci.oninput = upd;
+    ok.onclick = () => { upd(); if (!ok.disabled) finish('mixed', got, kaspi); };
+    s.append(el('div', 'lbl', 'По Kaspi'), ki, el('div', 'lbl', 'Наличными дал'), ci, info, ok);
+    upd();
+    ki.focus();
+  });
+}
+
+function finish(method, cashIn, kaspiPart) {
+  // Окно скидки сменилось, пока чек был открыт, — пересчитать и показать заново.
+  if (discountNow() !== saleOn) { renderMenu(); showCart(); return toast('Скидка ' + (saleOn ? 'началась' : 'закончилась') + ' — цены в чеке пересчитаны, проверьте сумму'); }
+  const sale = {
+    id: uid(), ts: editing ? editing.ts : Date.now(), method, total: cartTotal(), cash_in: cashIn,
+    kaspi_part: method === 'mixed' ? kaspiPart : null, edit_of: editing ? editing.id : null,
+    items: cart.map(x => ({ n: x.n + (x.l ? ' ' + x.l : ''), p: x.p, q: x.q })), voided: false, synced: false
+  };
+  const label = { kaspi: 'Kaspi', cash: 'Наличные', mixed: 'Kaspi ' + fmt(kaspiPart || 0) + ' + нал' }[method];
+  if (editing) {
+    // Правка: новый чек на то же время + отмена старого, одним сохранением.
+    let old = sales.find(x => x.id === editing.id);
+    if (!old) { old = { ...editing.orig }; sales.push(old); }
+    const was = { v: old.voided, s: old.synced };
+    old.voided = true; old.synced = false;
+    sales.push(sale);
+    if (!save()) { sales.pop(); old.voided = was.v; old.synced = was.s; return saveFail(); }
+    editing = null; cart = []; renderCart(); closeSheet();
+    toast('Чек исправлен · ' + label + ' · ' + fmt(sale.total));
+    sync().then(() => { if (!$('rep').classList.contains('hide')) renderRep(); });
+    return;
+  }
+  sales.push(sale);
+  if (!save()) { sales.pop(); return saveFail(); }
+  const backup = cart; cart = []; renderCart(); closeSheet();
+  toast(label + ' · ' + fmt(sale.total) + ' — сохранено', 'Отменить', () => {
+    sale.voided = true; sale.synced = false;
+    if (!save()) { sale.voided = false; return saveFail(); }
+    cart = backup; renderCart(); sync();
+  });
+  sync();
+}
+
+let toastTimer;
+function toast(txt, btn, fn) {
+  $('toastTxt').textContent = txt;
+  $('toastBtn').textContent = btn || '';
+  $('toastBtn').classList.toggle('hide', !btn);
+  $('toastBtn').onclick = () => { $('toast').classList.add('hide'); fn && fn(); };
+  $('toast').classList.remove('hide');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toast').classList.add('hide'), 6000);
+}
+
+// --- синхронизация ---
+let syncing = false;
+function setNet(on, txt) {
+  $('dot').classList.toggle('off', !on);
+  $('netTxt').textContent = txt;
+}
+function pendingCount() { return sales.filter(s => !s.synced).length + exps.filter(e => !e.synced).length; }
+async function sync() {
+  const ps = sales.filter(s => !s.synced), pe = exps.filter(e => !e.synced);
+  if (!ps.length && !pe.length) { if (navigator.onLine) setNet(true, 'онлайн'); return; }
+  if (syncing || !KEY) return;
+  syncing = true;
+  const sentVoid = new Map(ps.map(s => [s.id, !!s.voided]));
+  const sentVoidE = new Map(pe.map(e => [e.id, !!e.voided]));
+  try {
+    const r = await fetch(API + '/sync', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Kassa-Key': KEY },
+      body: JSON.stringify({ sales: ps, expenses: pe })
+    });
+    if (!r.ok) throw new Error(r.status);
+    const res = await r.json();
+    const okS = new Set(res.sales), okE = new Set(res.expenses);
+    // Отмечаем только то, что ушло, — пока ждали ответ, могли отменить чек.
+    ps.forEach(s => { if (okS.has(s.id) && sentVoid.get(s.id) === !!s.voided) s.synced = true; });
+    pe.forEach(e => { if (okE.has(e.id) && sentVoidE.get(e.id) === !!e.voided) e.synced = true; });
+    // Этот чек уже исправили с другого телефона — сервер записал нашу правку отменённой.
+    const rej = new Set(res.rejected || []);
+    sales.forEach(s => { if (rej.has(s.id)) s.voided = true; });
+    save();
+    if (rej.size) alert('Этот чек уже исправили на другом телефоне — ваша правка не принята. Проверьте Сводку.');
+    setNet(true, 'онлайн');
+  } catch (e) {
+    setNet(false, 'не отправлено: ' + pendingCount());
+  } finally {
+    syncing = false;
+  }
+}
+window.addEventListener('online', sync);
+window.addEventListener('offline', () => setNet(false, 'без сети' + (pendingCount() ? ' · ' + pendingCount() : '')));
+setInterval(sync, 30000);
+
+// --- сводка ---
+let repDay = dayOf(Date.now());
+function shiftDay(d) {
+  const t = new Date(repDay + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + d);
+  const nd = t.toISOString().slice(0, 10);
+  if (nd > dayOf(Date.now())) return;
+  repDay = nd; renderRep();
+}
+$('dPrev').onclick = () => shiftDay(-1);
+$('dNext').onclick = () => shiftDay(1);
+
+async function renderRep() {
+  const today = dayOf(Date.now());
+  $('dLbl').textContent = repDay === today ? 'Сегодня' : repDay.split('-').reverse().join('.');
+  $('dNext').disabled = repDay >= today;
+  await sync();
+  const byId = new Map();
+  const exById = new Map();
+  let online = false;
+  try {
+    const r = await fetch(API + '/day?d=' + repDay, { headers: { 'X-Kassa-Key': KEY }, cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    d.sales.forEach(s => byId.set(s.id, s));
+    d.expenses.forEach(e => exById.set(e.id, e));
+    online = true;
+  } catch (e) {}
+  // Свои неотправленные или отменённые здесь — поверх серверных.
+  sales.filter(s => dayOf(s.ts) === repDay).forEach(s => { const sv = byId.get(s.id); byId.set(s.id, { ...s, voided: s.voided || (sv && sv.voided) }); });
+  exps.filter(e => dayOf(e.ts) === repDay).forEach(e => { const sv = exById.get(e.id); exById.set(e.id, { ...e, voided: e.voided || (sv && sv.voided) }); });
+  const ds = [...byId.values()].sort((a, b) => b.ts - a.ts);
+  const de = [...exById.values()].sort((a, b) => b.ts - a.ts);
+  const live = ds.filter(s => !s.voided), liveE = de.filter(e => !e.voided);
+  // Смешанный чек делится: kaspi_part — в Kaspi, остаток — в наличные.
+  const kPart = s => s.method === 'kaspi' ? s.total : s.method === 'mixed' ? (s.kaspi_part || 0) : 0;
+  const kaspi = live.reduce((a, s) => a + kPart(s), 0);
+  const cash = live.reduce((a, s) => a + s.total - kPart(s), 0);
+  const editedIds = new Set(ds.filter(s => s.edit_of).map(s => s.edit_of));
+  const ex = liveE.reduce((a, e) => a + e.amount, 0);
+  $('kRev').textContent = fmt(kaspi + cash);
+  $('kKaspi').textContent = fmt(kaspi);
+  $('kCash').textContent = fmt(cash);
+  $('kExp').textContent = fmt(ex);
+  $('kNet').textContent = fmt(kaspi + cash - ex);
+  const note = $('repNote');
+  note.classList.toggle('hide', online);
+  note.textContent = 'Нет связи с сервером — показаны только чеки этого телефона.';
+  $('chkH').textContent = 'Чеки · ' + live.length;
+
+  const list = $('chkList'); list.textContent = '';
+  const rows = [...ds.map(s => ({ t: 's', o: s })), ...de.map(e => ({ t: 'e', o: e }))].sort((a, b) => b.o.ts - a.o.ts);
+  if (!rows.length) list.append(el('div', 'empty', 'Пока пусто'));
+  rows.forEach(({ t, o }) => {
+    const row = el('button', 'row' + (o.voided ? ' void' : ''));
+    const it = el('div', 'it');
+    if (t === 's') {
+      const tg = { kaspi: ['k', 'KASPI'], cash: ['c', 'НАЛ'], mixed: ['m', 'KASPI + НАЛ'] }[o.method] || ['c', o.method];
+      it.append(el('span', 'tag ' + tg[0], tg[1]), el('div', '', o.items.map(i => i.n + (i.q > 1 ? ' ×' + i.q : '')).join(', ')));
+      if (o.method === 'mixed') it.append(el('small', '', 'Kaspi ' + fmt(o.kaspi_part || 0) + ' + нал ' + fmt(o.total - (o.kaspi_part || 0)) + ' '));
+      const cashDue = o.total - kPart(o);
+      if (o.method !== 'kaspi' && o.cash_in != null && o.cash_in > cashDue) it.append(el('small', '', 'дал ' + fmt(o.cash_in) + ', сдача ' + fmt(o.cash_in - cashDue)));
+      if (o.edit_of && !o.voided) it.append(el('small', '', ' · исправленный'));
+      row.append(el('span', 'tm', timeOf(o.ts)), it, el('span', 'amt', fmt(o.total)));
+    } else {
+      it.append(el('span', 'tag e', 'РАСХОД'), el('div', '', o.note || '—'));
+      row.append(el('span', 'tm', timeOf(o.ts)), it, el('span', 'amt', '−' + fmt(o.amount)));
+    }
+    if (o.voided) it.append(el('small', '', t === 's' && editedIds.has(o.id) ? ' · исправлен' : ' · отменён'));
+    else row.onclick = () => askVoid(t, o);
+    list.append(row);
+  });
+}
+
+function askVoid(t, o) {
+  openSheet(s => {
+    s.append(el('h3', '', t === 's' ? 'Чек ' + timeOf(o.ts) + ' · ' + fmt(o.total) : 'Расход ' + fmt(o.amount)));
+    if (t === 's') {
+      const ed = el('button', 'big', 'Изменить');
+      ed.onclick = () => startEdit(o);
+      s.append(ed);
+    }
+    const b = el('button', 'big', t === 's' ? 'Отменить чек' : 'Удалить расход');
+    b.style.background = 'var(--kaspi)';
+    b.onclick = () => {
+      const arr = t === 's' ? sales : exps;
+      let loc = arr.find(x => x.id === o.id);
+      // Чек с другого телефона: кладём копию, чтобы отправить отмену.
+      if (!loc) { loc = { ...o }; arr.push(loc); }
+      const was = { v: loc.voided, s: loc.synced };
+      loc.voided = true; loc.synced = false;
+      if (!save()) { loc.voided = was.v; loc.synced = was.s; return saveFail(); }
+      closeSheet(); sync().then(renderRep);
+    };
+    const c = el('button', 'big', 'Назад'); c.style.background = 'var(--muted)'; c.onclick = closeSheet;
+    s.append(b, c);
+  });
+}
+
+// Чек из сводки — в корзину: правим позиции, оплату выбираем заново.
+function startEdit(o) {
+  if (cart.length && !editing && !confirm('В кассе собран другой чек — он сбросится. Продолжить?')) return;
+  editing = { id: o.id, ts: o.ts, total: o.total, orig: { ...o, synced: false } };
+  cart = o.items.map(i => ({ k: i.n + '|', n: i.n, l: '', p: i.p, q: i.q }));
+  closeSheet();
+  document.querySelector('header .tab[data-tab=sell]').click();
+  renderCart();
+  showCart();
+}
+
+$('expForm').onsubmit = e => {
+  e.preventDefault();
+  const amount = Math.round(+$('expAmt').value);
+  if (!(amount > 0)) return;
+  // Расход на выбранный день: если смотрим вчера — ставим на конец того дня.
+  const now = Date.now();
+  const ts = repDay === dayOf(now) ? now : Date.parse(repDay + 'T23:59:00Z') - TZ_MS;
+  exps.push({ id: uid(), ts, amount, note: $('expNote').value.trim(), voided: false, synced: false });
+  if (!save()) { exps.pop(); return saveFail(); }
+  $('expAmt').value = ''; $('expNote').value = '';
+  sync().then(renderRep);
+};
+
+// --- вкладки ---
+document.querySelectorAll('header .tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('header .tab').forEach(x => x.classList.toggle('on', x === b));
+  const rep = b.dataset.tab === 'rep';
+  $('sellWrap').classList.toggle('hide', rep);
+  $('rep').classList.toggle('hide', !rep);
+  if (rep) { repDay = dayOf(Date.now()); renderRep(); }
+});
+
+// --- старт ---
+if (!KEY) { $('nokey').classList.remove('hide'); $('sellWrap').classList.add('hide'); }
+// Раз в минуту: скидка включилась или кончилась — перерисовать плитки.
+// Если в этот момент открыта оплата — вернуть на чек: сумма для сдачи могла устареть.
+setInterval(() => {
+  if (!menu.cats.length || discountNow() === saleOn) return;
+  renderMenu();
+  if (!$('sheetBg').classList.contains('hide') && cart.length) {
+    showCart();
+    toast('Скидка ' + (saleOn ? 'началась' : 'закончилась') + ' — цены в чеке пересчитаны, проверьте сумму');
+  }
+}, 60e3);
+fetch('menu.json').then(r => r.json()).then(m => { menu = m; renderMenu(); }).catch(() => { $('sell').append(el('div', 'empty', 'Меню не загрузилось — проверьте сеть и обновите страницу')); });
+if (!navigator.onLine) setNet(false, 'без сети');
+sync();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
